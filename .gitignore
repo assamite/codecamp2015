@@ -1,3 +1,13 @@
+# Local Settings for Django
+lsettings.py
+
+# Eclipse
+.project
+.pydevproject
+
+# SQLite
+db.sqlite3
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
