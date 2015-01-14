@@ -16,10 +16,12 @@ import operator
 from pattern.web import DOM, URL, plaintext, encode_utf8, decode_utf8, cache
 import urllib2
 from datetime import datetime
-
 import feedparser
 
+import nlp
 from models import Article, Movie, Person, Keyword
+
+RSS_URL = 'http://rss.cnn.com/rss/edition_entertainment.rss'
 
 
 # In case we are not running these through Django, let module know
@@ -71,29 +73,75 @@ def tweet(tweet):
 
     return (True, tweet)
 
+def get_feed(rss_url, max_items = 10):
+    '''Get most recent entries from the given RSS feed.
+    
+    The returned entries are in the same format as created by `feedparser <http://pythonhosted.org/feedparser/>`_.
+    
+    :param rss_url: URL to the RSS feed
+    :type rss_url: str
+    :param max_items: Maximum amount of items returned from feed
+    :type max_items: int
+    :returns: list - feed's last entries
+    '''
+    logger.info("Getting {} newest articles from {}".format(max_items, rss_url))
+    feed = feedparser.parse(rss_url)
+    return feed['entries'] if len(feed['entries']) < max_items else feed['entries'][:max_items]
+
+
+def get_articles(rss_url, amount = 10):
+    '''Get most recent articles from the given RSS feed.
+    
+    Each article is returned as a dictionary with following contents:
+    
+    =====    =================================================
+    Key      Value
+    =====    =================================================
+    title    Headline for the article
+    url      URL for the article
+    =====    =================================================
+    
+    :param rss_url: URL to the RSS feed
+    :type rss_url: str
+    :param amount: Amount of articles to retrieve. For safety, should be in [1, 25].
+    :type amount: int
+    :returns: list -- Parsed articles  
+    '''
+    #if url_type not in SUPPORTED_FORMATS:
+    #    raise ValueError('Given url_type: {} not in supported formats.'.format(url_type))
+        
+    entries = get_feed(rss_url, max_items = amount)
+    ret = []
+    for entry in entries:
+        article = {}
+        article['title'] = entry['title']
+        article['url'] = entry['link']
+        #soup = _get_soup(entry['link'])
+        #article['text'] = _parse_article(soup, url_type = url_type)
+        #if bow:
+        #    article['bow_counts'] = text.bow(article['text'], counts = True)
+        #    article['bow'] = [w[0] for w in article['bow_counts']]
+        ret.append(article)
+    return ret
+        
+
 def fetch_articles_from_web(count):
     articles = []
-    for i in range(0,count):
-        #Fetch news article
-        #Create Article object
-        #Add to list
-
-        """
-        d = feedparser.parse('http://rss.cnn.com/rss/edition_entertainment.rss')
-        """
-
-        a = Article()
-        articles.append(a)
-
+    ret = get_articles(RSS_URL, count)
+    for a in ret:
+        ars = Article.objects.filter(url = a['url'])
+        if len(ars) == 0:
+            article = Article(headline = a['title'], url = a['url'], date = datetime.now(), content = "")
+            keywords = nlp.parse(a['title'])
+            for kw in keywords:
+                article.keywords.add(kw)
+            article.save()
+        else:
+            article = ars[0]
+     
+        articles.append(article) 
     return articles
-
-def get_movie_based_on_keyword(keyword):
-    src = download_en("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + keyword + "&s=all")
-    dom = DOM(src)
-
-    for filmInstances in dom(".findList .result_text a"):
-        print str(filmInstances[0])
-        #if "title" in somestring: continue
+    
 
 def fetch_single_movie_from_web(singleUrl):
     src = download_en(singleUrl) #force english downloading of movie URL
@@ -172,7 +220,7 @@ def fetch_single_movie_from_web(singleUrl):
 
     return newMovie
 
-def get_movie_based_on_keyword2(keyword):
+def get_movie_based_on_keyword(keyword):
     src = download_en("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + keyword + "&s=all")
     dom = DOM(src)
 
@@ -318,6 +366,7 @@ def queryFreebaseNotableFromName(keyword):
 
 def queryFreebasePeopleNameFromAlias(keyword):
     service_url = 'https://www.googleapis.com/freebase/v1/search'
+    print settings.FREEBASE_API_KEY
     params = {
     'query': keyword,
     'key': settings.FREEBASE_API_KEY,
@@ -326,6 +375,7 @@ def queryFreebasePeopleNameFromAlias(keyword):
     }
     url = service_url + '?' + urllib.urlencode(params)
     response = json.loads(urllib.urlopen(url).read())
+    print response
     if(len(response["result"])>0):
         return response["result"][0]["name"]
     return -1

@@ -1,5 +1,5 @@
 from models import Keyword
-from pattern.en import parse, parsetree, wordnet
+from pattern.en import parse, parsetree, wordnet, NOUN
 import re
 
 import io
@@ -81,21 +81,35 @@ def assess(keywords):
     #Assess the keywords and return a number between 0..1, where 1 indicates best suitability
 
 
-def fitness(article, movie):
+def fitness(article, movie, model):
     
     #Calculate similarity score
     totalScore = 0
     comparisons = 0
-    for articleKeyword in article.keywords:
-        for movieKeyword in movie.keywords:
-            movieSynset = wordnet.synsets(movieKeyword)
-            if(articleKeyword.type==movieKeyword.type):
-                articleSynset = wordnet.synsets(articleKeyword)
+    article_kws = article.keywords.filter(type = "NN")
+    movie_kws = movie.keywords.filter(type = "NN")
+    
+    for articleKeyword in article_kws:
+        for movieKeyword in movie_kws:       
+            movieSynsets = wordnet.synsets(movieKeyword, NOUN)
+            if len(movieSynsets) > 0:
+                movieSynset = movieSynsets[0]
+            else:
+                continue
+            if articleKeyword.type == movieKeyword.type:
+                articleSynsets = wordnet.synsets(articleKeyword, NOUN)
+                if len(articleSynsets) > 0:
+                    articleSynset = movieSynsets[0]
+                else:
+                    continue
                 score = wordnet.similarity(movieSynset,articleSynset)
+                print movieSynset, articleSynset, score
                 totalScore += score
                 comparisons += 1
                 
-    return totalScore/comparisons
+    comparisons = 1 if comparisons == 0 else comparisons
+                
+    return float(totalScore)/comparisons
 
 
 def blend(article, movie):

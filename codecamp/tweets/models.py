@@ -21,6 +21,10 @@ class Keyword(models.Model):
     word = models.CharField(max_length = 100)
     weight = models.PositiveIntegerField(default = 0)
     objects = GetOrNoneManager()
+    
+
+class Alias(models.Model):
+    name = models.CharField(max_length = 200)
 
 
 class Person(models.Model):
@@ -33,6 +37,7 @@ class Person(models.Model):
     posattr = models.ManyToManyField(Keyword, related_name = 'posattr+')
     # Negative talk points / attributes
     negattr = models.ManyToManyField(Keyword, related_name = 'negattr+')
+    aliases = models.ManyToManyField(Alias, related_name = 'alias+')
     objects = GetOrNoneManager()
     
     
@@ -60,3 +65,5 @@ class Article(models.Model):
     used = models.BooleanField(default = False)
     objects = GetOrNoneManager()
     
+    
+
