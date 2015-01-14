@@ -1,5 +1,9 @@
+.DS_Store
+
 # Local Settings for Django
 lsettings.py
+
+.idea/*
 
 # Eclipse
 .project
