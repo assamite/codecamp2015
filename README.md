@@ -1,18 +1,14 @@
  Group CALCULUS, ProSECCO Code Camp, January 2015
- ################################################
+=================================================
 
 Project: News headline and movie title collider
 
 Install Notes
 =============
 
-.. warning::
-	TwatBot is currently developed for Python 2.7.x. No compatibility for other 
-	Python versions is guaranteed.
-
-Codecamp is developed as a `Django <https://djangoproject.com/>`_ app. Access to 
-`Twitter API <https://dev.twitter.com/overview/documentation>`_ is gained using 
-`tweepy <http://www.tweepy.org/>`_.
+Codecamp is developed as a [Django](https://djangoproject.com/) app. Access to 
+[Twitter API](https://dev.twitter.com/overview/documentation) is gained using 
+[tweepy](http://www.tweepy.org/).
 
 You should be familiar with basic Django project layout and have a working 
 `Twitter app <https://apps.twitter.com/>`_ which allows you to Tweet before 
@@ -24,7 +20,7 @@ using this project.
 
 	$> git clone https://github.com/assamite/codecamp.git
 
-* Install `pip <https://pypi.python.org/pypi/pip>`_
+* Install [pip](https://pypi.python.org/pypi/pip)
 * Install third party libraries::
 
 	$> cd project_root/
@@ -37,11 +33,13 @@ using this project.
 	
 * Configure ``lsettings.py``  with at least following attributes (see Twitter API documentation for details)::
 
+	```
 	SECRET_KEY = 'Secret key for Django'
 	TWITTER_API_KEY = 'Your Twitter API key'
 	TWITTER_API_SECRET  = 'Your Twitter API secret'
 	TWITTER_ACCESS_TOKEN = 'Your Twitter access token'
 	TWITTER_ACCESS_TOKEN_SECRET = 'Your Twitter access token secret'
+	```
 
 * Create DB-tables::
 	
