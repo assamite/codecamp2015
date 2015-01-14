@@ -1,3 +1,5 @@
+from models import Keyword
+
 def assess_quality (keywords):
     quality = 0
     for key in keywords:
