@@ -9,6 +9,12 @@ import os
 import logging
 import traceback
 import math
+from pattern.web import DOM, URL
+import plaintext
+import encode_utf8
+import decode_utf8
+import urllib2
+import cache
 
 import feedparser
 
