@@ -8,6 +8,9 @@ import sys
 import os
 import logging
 import traceback
+from models import Article
+from models import Movie
+
 
 # In case we are not running these through Django, let module know
 # the correct twitter app settings from TwatBot's settings file.
@@ -47,3 +50,46 @@ def tweet(self, tweet):
         return (False, "")
     
     return (True, tweet)
+
+
+
+def fetch_articles_from_web(self, count):
+    articles = []
+    for i in range(0,count):
+        #Fetch news article
+        #Create Article object
+        #Add to list
+        a = Article() 
+        articles.append(a)
+        
+    return articles
+
+
+
+def fetch_movies_from_web(self, count):
+    movies = []
+    for i in range(0,count):
+        #Fetch movies from imdb
+        #Create Movie object
+        #Add to list
+        a = Movie() 
+        movies.append(a)
+        
+    return movies
+
+
+
+def fetch_movies_from_database(self):
+    movies = []
+    #Query DB and store movies in list. Return list.
+    
+    return movies
+
+
+
+def push_movies_to_database(movies):
+    
+    #Push list of movies to database
+    
+    return 1
+
