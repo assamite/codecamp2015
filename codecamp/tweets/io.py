@@ -15,6 +15,8 @@ import urllib
 import json
 from pattern.web import DOM, URL, plaintext, encode_utf8, decode_utf8, cache
 from datetime import datetime
+
+
 import nlp
 from models import Article, Movie, Person, Keyword
 
@@ -251,4 +253,7 @@ def queryFreebase(keyword):
     params = { 'query': json.dumps(query), 'key': api_key, 'limit':5}
     url = service_url + '?' + urllib.urlencode(params)
     response = json.loads(urllib.urlopen(url).read())
-    print json.dumps(response,indent=4)
+    if(len(response["result"])>0):
+        return response[0]["/common/topic/alias"]
+    else:
+        return []
