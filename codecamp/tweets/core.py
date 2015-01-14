@@ -54,5 +54,5 @@ def main(self):
     
     tweet = nlp.blend(bestPair[0],bestPair[1])
     io.tweet(tweet)
-    
     return tweet
+
