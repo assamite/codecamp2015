@@ -5,7 +5,7 @@ import os
 
 if 'DJANGO_SETTINGS_MODULE' not in os.environ:
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'TwatBot.settings'
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'codecamp.settings'
 
 import logging
 import traceback

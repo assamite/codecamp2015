@@ -1,8 +1,8 @@
 def change_title (keywords_movie,keywords_news):   
     for key_movie in keywords_movie:
-        if "PERS" in key_movie.tag:
+        if "PERSON" in key_movie.type:
             for key_news in keywords_news:
-                if "PERS" in key_news.tag
+                if "PERSON" in key_news.type
                     key_movie.word = key_news.word
                     break
     
