@@ -2,6 +2,8 @@ from models import Keyword
 from pattern.en import parse, parsetree, wordnet
 import re
 
+import io
+
 def parse(text):
 
     keywords = list()
@@ -29,9 +31,24 @@ def parse(text):
                         namedEntities.append((word.lemma).capitalize())
                         index+=1
                     else:
-                        keywordLemma = Keyword(type = word.tag, word = word.lemma, weight = 0)
-                        keywordLemma.save()
-                        keywords.append(keywordLemma)
+                        tag = word.tag
+                        lemma = word.lemma
+                        if tag[:2] in ['NN', 'JJ', 'VB']:
+                            if tag != "NNP":
+                                tag = tag[:2]
+                            else:
+                                lemma = lemma.capitalize()
+                                person = io.queryFreebasePeopleNameFromAlias(lemma)
+                                if person != -1:
+                                    namedEntities.append(person)
+                            
+                            kws = Keyword.objects.filter(type = tag, word = lemma)
+                            if len(kws) == 0:
+                                keywordLemma = Keyword(type = tag, word = lemma, weight = 0)
+                                keywordLemma.save()
+                            else:
+                                keywordLemma = kws[0]
+                            keywords.append(keywordLemma)
                 previous_chunk=word.tag
 
                 #  print word.string,word.lemma,word.tag
@@ -40,8 +57,12 @@ def parse(text):
             #  print namedEntities
 
     for namedEntity in namedEntities:
-        namedEntityKW = Keyword(type = "PERSON", word = namedEntity, weight = 0)
-        namedEntityKW.save()
+        kws = Keyword.objects.filter(type = 'PERSON', word = namedEntity)
+        if len(kws) == 0:     
+            namedEntityKW = Keyword(type = "PERSON", word = namedEntity, weight = 0)
+            namedEntityKW.save()
+        else:
+            namedEntityKW = kws[0]
         keywords.append(namedEntityKW)
 
     for keyword in keywords:
@@ -60,7 +81,6 @@ def assess(keywords):
 
     return quality
     #Assess the keywords and return a number between 0..1, where 1 indicates best suitability
-
 
 
 def fitness(article, movie):
