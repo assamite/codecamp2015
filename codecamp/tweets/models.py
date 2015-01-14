@@ -53,7 +53,7 @@ class Movie(models.Model):
     
 class Article(models.Model):
     headline = models.CharField(max_length = 500)
-    content = models.TextField()
+    content = models.TextField(null = True)
     url = models.URLField()
     date = models.DateField()
     keywords = models.ManyToManyField(Keyword)
