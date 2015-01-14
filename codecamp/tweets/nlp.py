@@ -77,6 +77,15 @@ def blend(article, movie):
     
     blended = ""
     #Blend article and movie together and return result text
+    for key_movie in movie.keywords:
+        if "PERSON" in key_movie.type:
+            for key_news in article.keywords:
+                if "PERSON" in key_news.type
+                    key_movie.word = key_news.word
+                    break
+                    
+    for key_movie in movie.keywords:
+        blended = blended + key_movie.word
     
     return blended
     
