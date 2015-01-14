@@ -100,7 +100,7 @@ def fitness(article, movie):
     return totalScore/comparisons
 
 
-def blend(article, movie):
+def blend(article, movie,adjectives):
     title = movie.title
     print title
     
