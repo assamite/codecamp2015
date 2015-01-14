@@ -21,7 +21,7 @@ def assess(keywords):
 
 
 
-def similarity(article, movie):
+def fitness(article, movie):
     
     #Calculate similarity score
     return 1

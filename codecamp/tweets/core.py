@@ -2,7 +2,7 @@ import io
 import nlp
 from models import Movie
 from django.http.response import HttpResponse
-from tweets.io import fetch_movies_from_web, fetch_articles_from_web
+#from tweets.io import fetch_movies_from_web, fetch_articles_from_web
 
 if __name__ == '__main__':
     pass
@@ -14,8 +14,9 @@ def main(self):
     if(len(movies)==0):
         movies = io.fetch_movies_from_web(250)
         for i in range(0,len(movies)):
-            movies[i].keywords = nlp.parse(movies[i].title)
-            movies[i].save()
+            for keyword in nlp.parse(movies[i].title):
+                movies[i].keywords.add(keyword)
+                movies[i].save()
         
     #Pull the latest news. There's no need to persist them.
     articles = io.fetch_articles_from_web(10)
@@ -23,7 +24,8 @@ def main(self):
     #Parse articles
     for i in range(0,len(articles)):
         keywords = nlp.parse(articles[i].headline)
-        articles[i].keywords = keywords
+        for keyword in keywords:
+            articles[i].keywords.add(keyword)
         
     #Assess articles
     threshold = 0.5
@@ -38,13 +40,13 @@ def main(self):
         return 1
         
     #Retrieve best matching pair of movie and news article
-    maxSimilarity = threshold
+    maxFitness = threshold
     bestPair = []
     for i in range(0,len(articles)):
         for j in range(0, len(movies)):
-            similarity = nlp.similarity(articles[i], movies[j])
-            if(similarity>maxSimilarity):
-                maxSimilarity = similarity
+            fitness = nlp.fitness(articles[i], movies[j])
+            if(fitness>maxFitness):
+                maxFitness = fitness
                 bestPair = [articles[i],movies[j]]
                 
     if(len(bestPair)==0):
@@ -54,4 +56,4 @@ def main(self):
     tweet = nlp.blend(bestPair[0],bestPair[1])
     io.tweet(tweet)
     
-    return HttpResponse(tweet)    
+    return tweet 
