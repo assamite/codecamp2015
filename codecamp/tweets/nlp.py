@@ -80,7 +80,7 @@ def blend(article, movie):
     for key_movie in movie.keywords:
         if "PERSON" in key_movie.type:
             for key_news in article.keywords:
-                if "PERSON" in key_news.type
+                if "PERSON" in key_news.type:
                     key_movie.word = key_news.word
                     break
                     
