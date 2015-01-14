@@ -1,7 +1,7 @@
 '''
-.. py:module:: 
+.. py:module::
     :platform: Unix
-    
+
 IO functionality
 '''
 import sys
@@ -47,19 +47,19 @@ def download_en(url, cached=False): # set cached=True to store the download sour
 
 def tweet(tweet):
     '''Tweet to the twitter.
-    
-    .. warning:: 
+
+    .. warning::
         Don't use this method directly as the sent tweets are not stored in
         the bot's memory.
-    
+
     :returns: tuple -- (bool, str), where bool is True if the tweet was send,
     and False otherwise. str contains the actual tweet returned by Twitter,
     it can be altered from the given tweet by, e.g. adding short URL for the
     given image.
     '''
-    if DEBUG: 
+    if DEBUG:
         logger.info("DEBUG mode on, choosing not to tweet.")
-        return (True, tweet)   
+        return (True, tweet)
     try:
         auth = tweepy.OAuthHandler(settings.TWITTER_API_KEY, settings.TWITTER_API_SECRET)
         auth.set_access_token(settings.TWITTER_ACCESS_TOKEN, settings.TWITTER_ACCESS_TOKEN_SECRET)
@@ -69,7 +69,7 @@ def tweet(tweet):
         e = traceback.format_exc()
         logger.error("Could not tweet to Twitter. Error: {}".format(e))
         return (False, "")
-    
+
     return (True, tweet)
 
 
@@ -127,6 +127,7 @@ def get_articles(rss_url, amount = 10):
 
 def fetch_articles_from_web(count):
     articles = []
+    
     ret = get_articles(RSS_URL, count)
     for a in ret:
         article = Article(headline = a['title'], url = a['url'], date = datetime.now(), content = "")
@@ -138,7 +139,92 @@ def fetch_articles_from_web(count):
         articles.append(article)
         
     return articles
-    
+
+def get_movie_based_on_keyword(keyword):
+    src = download_en("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + keyword + "&s=all")
+    dom = DOM(src)
+
+    for filmInstances in dom(".findList .result_text a"):
+        print str(filmInstances[0])
+        #if "title" in somestring: continue
+
+def fetch_single_movie_from_web(singleUrl):
+    src = download_en(singleUrl) #force english downloading of movie URL
+    filmDom = DOM(src)
+
+    #We should first query the database to see if this url exists.
+    #If it does, we should return that object instead of needlessly scraping
+
+    title = ""
+    year = 0
+    genre = ""
+
+    #get film year
+    for filmYear in filmDom(".header .nobr"):
+        year = int(str(filmYear[1][0]))
+
+    #get film title
+    for filmTitle in filmDom(".header .itemprop"):
+        title = str(filmTitle[0])
+
+    #get film genres
+    for filmGenre in filmDom(".infobar .itemprop"):
+        genre = str(filmGenre[0])
+
+    #intentionally commented out for now
+
+    #get film keywords
+    #for filmKeyword in filmDom(".see-more .itemprop"):
+    #newKeyword.word = filmKeyword[0]
+    #newKeyword.save() #add new keyword
+    #newMovie.add(newKeyword)
+
+    #get short summary
+    filmShortSummary = filmDom("#overview-top p")[1]
+    filmShortSummary = str(filmShortSummary)
+    filmShortSummary = filmShortSummary.replace('<p itemprop="description">', "")
+    filmShortSummary = filmShortSummary.replace('</p>', "")
+    filmShortSummary = str(filmShortSummary.strip())
+    short_summary = filmShortSummary
+
+    #get long summary
+    for filmLongSummary in filmDom("#titleStoryLine .canwrap p"):
+        filmLongSummary = filmLongSummary[0]
+        filmLongSummary = str(filmLongSummary).strip()
+        long_summary = filmLongSummary
+
+    newMovie = Movie(title = title, genre = genre, year = year,\
+                    url = singleUrl, short_summary = short_summary,\
+                    long_summary = long_summary,\
+                    toplist_pos = 9999)
+    newMovie.save()
+
+    #get film actors
+    for filmActor in filmDom(".cast_list .itemprop a span"):
+        name = str(filmActor[0])
+        actor = Person.objects.get_or_none(name = name)
+        if actor is None:
+            actor = Person(name = name, birthday = datetime.now(),\
+            nationality = "Unknown", gender = "O")
+            actor.save()
+        newMovie.cast.add(actor)
+        print filmActor[0]
+
+    #get film characters
+    for filmCharacter in filmDom(".cast_list .character a"):
+        name = str(filmCharacter[0])
+        person = Person.objects.get_or_none(name = name)
+        if person is None:
+            person = Person(name = name, birthday = datetime.now(),\
+                            nationality = "Unknown", gender = "O")
+            person.save()
+        newMovie.persons.add(person)
+        print filmCharacter[0]
+
+    newMovie.save()
+
+    return newMovie
+
 def fetch_movies_from_web(amount):
     movies = []
     mainUrl = "http://www.imdb.com/search/title?groups=top_1000&sort=user_rating&view=simple"
@@ -160,14 +246,14 @@ def fetch_movies_from_web(amount):
         for p in dom(".title a"):
             if totalResults == amount:
                 break
-            
-            #newKeyword = Keyword() 
+
+            #newKeyword = Keyword()
 
             movieURL = "http://akas.imdb.com" + str(p.href)
 
             src = download_en(movieURL) #force english downloading of movie URL
             filmDom = DOM(src)
-            
+
             toplist_pos = int(str(ranking[count][0])[:-1])
             url = movieURL
             title = ""
@@ -185,17 +271,15 @@ def fetch_movies_from_web(amount):
             #get film genres
             for filmGenre in filmDom(".infobar .itemprop"):
                 genre = str(filmGenre[0])
-                
+
             #intentionally commented out for now
 
             #get film keywords
             #for filmKeyword in filmDom(".see-more .itemprop"):
-			#	newKeyword.word = filmKeyword[0]
-            #    newKeyword.save() #add new keyword
-            #    newMovie.add(newKeyword)
+            #newKeyword.word = filmKeyword[0]
+            #newKeyword.save() #add new keyword
+            #newMovie.add(newKeyword)
 
-
-                
             #get short summary
             filmShortSummary = filmDom("#overview-top p")[1]
             filmShortSummary = str(filmShortSummary)
@@ -209,13 +293,13 @@ def fetch_movies_from_web(amount):
                 filmLongSummary = filmLongSummary[0]
                 filmLongSummary = str(filmLongSummary).strip()
                 long_summary = filmLongSummary
-                
+
             newMovie = Movie(title = title, genre = genre, year = year,\
                              url = url, short_summary = short_summary,\
                              long_summary = long_summary,\
                              toplist_pos = toplist_pos)
             newMovie.save()
-                    
+
                         #get film actors
             for filmActor in filmDom(".cast_list .itemprop a span"):
                 name = str(filmActor[0])
@@ -242,7 +326,7 @@ def fetch_movies_from_web(amount):
             totalResults += 1
             newMovie.save()
             movies.append(newMovie)
-        
+
     return movies
 
 def queryFreebaseNotableFromName(keyword):
