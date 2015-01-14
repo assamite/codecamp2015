@@ -10,15 +10,15 @@ class Keyword(models.Model):
 
 
 class Person(models.Model):
-    name = models.CharField(max_length = 500, unique = True)
+    name = models.CharField(max_length = 255, unique = True)
     birthday = models.DateField(blank = True)
     nationality = models.CharField(max_length = 100, blank = True)
     # (M)ale / (F)emale / (O)ther
     gender = models.CharField(max_length = 1)
     # Positive talk points / attributes
-    posattr = models.ManyToManyField(Keyword)
+    posattr = models.ManyToManyField(Keyword, related_name = 'posattr+')
     # Negative talk points / attributes
-    negattr = models.ManyToManyField(Keyword)
+    negattr = models.ManyToManyField(Keyword, related_name = 'negattr+')
     
     
 class Movie(models.Model):
@@ -30,9 +30,9 @@ class Movie(models.Model):
     year = models.IntegerField(blank = True)
     toplist_pos = models.PositiveIntegerField(blank = True)
     # Persons who are played by the cast
-    persons = models.ForeignKey(Person)
-    cast = models.ForeignKey(Person)
-    keywords = models.ForeignKey(Keyword)
+    persons = models.ManyToManyField(Person, related_name = 'persons+')
+    cast = models.ManyToManyField(Person, related_name = 'cast+')
+    keywords = models.ManyToManyField(Keyword)
     
     
 class Article(models.Model):
@@ -40,6 +40,6 @@ class Article(models.Model):
     content = models.TextField()
     url = models.URLField()
     date = models.DateField()
-    keywords = models.ForeignKey(Keyword)
+    keywords = models.ManyToManyField(Keyword)
     used = models.BooleanField(default = False)
     

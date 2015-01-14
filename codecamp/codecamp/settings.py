@@ -43,6 +43,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_cron',
+    'tweets'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -57,7 +59,6 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'codecamp.urls'
 
 WSGI_APPLICATION = 'codecamp.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
