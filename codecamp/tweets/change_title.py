@@ -1,3 +1,5 @@
+from models import Keyword
+
 def change_title (keywords_movie,keywords_news):   
     for key_movie in keywords_movie:
         if "PERSON" in key_movie.type:
