@@ -9,6 +9,9 @@ import os
 import logging
 import traceback
 import math
+
+import feedparser
+
 from models import Article
 from models import Movie
 
@@ -68,11 +71,16 @@ def fetch_articles_from_web(self, count):
         #Fetch news article
         #Create Article object
         #Add to list
+        
+        """    
+        d = feedparser.parse('http://rss.cnn.com/rss/edition_entertainment.rss')
+        """
+        
         a = Article() 
         articles.append(a)
         
     return articles
-
+    
 def fetch_movies_from_web(self, amount):
     movies = []
     mainUrl = "http://www.imdb.com/search/title?groups=top_1000&sort=user_rating&view=simple"
