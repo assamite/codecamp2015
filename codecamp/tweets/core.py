@@ -8,11 +8,6 @@ if __name__ == '__main__':
     pass
 
 def main(self):
-<<<<<<< HEAD
-    #Execute different methods
-    pass
-=======
-    
     #Check if database is empty. In this case, fetch movies, parse them, and store them in database
     movies = Movie.objects.all()
     if(len(movies)==0):
@@ -60,5 +55,4 @@ def main(self):
     tweet = nlp.blend(bestPair[0],bestPair[1])
     io.tweet(tweet)
     
-    return tweet 
->>>>>>> FETCH_HEAD
+    return tweet
