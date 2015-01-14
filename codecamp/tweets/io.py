@@ -14,7 +14,6 @@ import traceback
 import math
 import operator
 from pattern.web import DOM, URL, plaintext, encode_utf8, decode_utf8, cache
-#import plaintext
 import urllib2
 from datetime import datetime
 
@@ -300,3 +299,45 @@ def fetch_movies_from_web(amount):
             movies.append(newMovie)
 
     return movies
+
+def queryFreebaseNotableFromName(keyword):
+    service_url = 'https://www.googleapis.com/freebase/v1/search'
+    params = {
+    'query': keyword,
+    'key': settings.FREEBASE_API_KEY,
+    'filter':'(any type:/people/person)',
+    'limit':1
+    }
+    url = service_url + '?' + urllib.urlencode(params)
+    response = json.loads(urllib.urlopen(url).read())
+    if(len(response["result"])>0):
+        if("notable" in response["result"][0].keys()):
+            return response["result"]
+        return response["result"][0]["notable"]["name"]
+    return -1
+
+def queryFreebasePeopleNameFromAlias(keyword):
+    service_url = 'https://www.googleapis.com/freebase/v1/search'
+    params = {
+    'query': keyword,
+    'key': settings.FREEBASE_API_KEY,
+    'filter':'(any type:/people/person)',
+    'limit':1
+    }
+    url = service_url + '?' + urllib.urlencode(params)
+    response = json.loads(urllib.urlopen(url).read())
+    if(len(response["result"])>0):
+        return response["result"][0]["name"]
+    return -1
+
+#Query max 10 times per second!
+def queryFreebaseAliases(keyword):
+    service_url = 'https://www.googleapis.com/freebase/v1/mqlread'
+    query = [{ "name": keyword, "/common/topic/alias": []}]
+    params = { 'query': json.dumps(query), 'key': settings.FREEBASE_API_KEY, 'limit':1}
+    url = service_url + '?' + urllib.urlencode(params)
+    response = json.loads(urllib.urlopen(url).read())
+    if(len(response["result"])>0):
+        return response[0]["/common/topic/alias"]
+    else:
+        return []
