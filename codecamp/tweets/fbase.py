@@ -28,4 +28,4 @@ def query(id = None, name = None, type = None):
     }
     url = service_url + '?' + urllib.urlencode(params)
     response = json.loads(urllib.urlopen(url).read())
-    return response['result']
+    return response

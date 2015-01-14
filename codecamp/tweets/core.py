@@ -7,11 +7,7 @@ from django.http.response import HttpResponse
 if __name__ == '__main__':
     pass
 
-def main(self):
-    
-    io.queryFreebase("Arnold Schwarzenegger")
-    return
-    
+def main(send_to_twitter = False):
     #Check if database is empty. In this case, fetch movies, parse them, and store them in database
     movies = Movie.objects.all()
     if(len(movies)==0):
@@ -22,7 +18,7 @@ def main(self):
                 movies[i].save()
         
     #Pull the latest news. There's no need to persist them.
-    articles = io.fetch_articles_from_web(10)
+    articles = io.fetch_articles_from_web(20)
     
     #Parse articles
     for i in range(0,len(articles)):
@@ -34,7 +30,7 @@ def main(self):
     threshold = 0.5
     articleSelection = []
     for i in range(0,len(articles)):
-        score = nlp.assess(articles[i].keywords)
+        score = nlp.assess(articles[i].keywords.all())
         if(score > threshold):
             articleSelection.append(articles[i])
             
@@ -57,6 +53,7 @@ def main(self):
         return 1
     
     tweet = nlp.blend(bestPair[0],bestPair[1])
-    io.tweet(tweet)
+    if send_to_twitter: 
+        io.tweet(tweet)
     return tweet
 
