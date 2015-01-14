@@ -20,7 +20,7 @@ using this project.
 
 	```
 	$> git clone https://github.com/assamite/codecamp.git
-	``
+	```
 
 * Install [pip](https://pypi.python.org/pypi/pip)
 * Install third party libraries::
@@ -56,11 +56,7 @@ using this project.
 
 * Configure project's cronjobs to be run every 5 minutes (or so)
 
-	.. warning::
-		This will make your bot to Tweet every once in a while, so only do this
-		when you are ready to face the consequences.
-		
-		**If you just want to test the bot locally, don't enable cronjobs.**
+	**If you just want to test the bot locally, don't enable cronjobs.**
 
 	* Open crontab in new editor from terminal::
 
