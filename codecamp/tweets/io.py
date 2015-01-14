@@ -6,7 +6,10 @@ IO functionality
 '''
 import sys
 import os
+import json
+import urllib
 import logging
+import operator
 import traceback
 import math
 from pattern.web import DOM, URL, plaintext, encode_utf8, decode_utf8, cache
@@ -169,7 +172,7 @@ def fetch_single_movie_from_web(singleUrl):
 
     return newMovie
 
-def get_movie_based_on_keyword(keyword):
+def get_movie_based_on_keyword2(keyword):
     src = download_en("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + keyword + "&s=all")
     dom = DOM(src)
 

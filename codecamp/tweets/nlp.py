@@ -2,6 +2,8 @@ from models import Keyword
 from pattern.en import parse,parsetree
 import re
 
+import io
+
 def parse(text):
 
     keywords = list()
@@ -30,8 +32,16 @@ def parse(text):
                         index+=1
                     else:
                         tag = word.tag
+                        lemma = word.lemma
                         if tag[:2] in ['NN', 'JJ', 'VB']:
-                            lemma = word.lemma
+                            if tag != "NNP":
+                                tag = tag[:2]
+                            else:
+                                lemma = lemma.capitalize()
+                                person = io.queryFreebasePeopleNameFromAlias(lemma)
+                                if person != -1:
+                                    namedEntities.append(person)
+                            
                             kws = Keyword.objects.filter(type = tag, word = lemma)
                             if len(kws) == 0:
                                 keywordLemma = Keyword(type = tag, word = lemma, weight = 0)
