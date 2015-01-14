@@ -41,8 +41,8 @@ def tweet(self, tweet):
         logger.info("DEBUG mode on, choosing not to tweet.")
         return (True, tweet)   
     try:
-        auth = tweepy.OAuthHandler(self.tak, self.tas)
-        auth.set_access_token(self.tat, self.tats)
+        auth = tweepy.OAuthHandler(settings.TWITTER_API_KEY, self.TWITTER_API_SECRET)
+        auth.set_access_token(settings.TWITTER_ACCESS_TOKEN, settings.TWITTER_ACCESS_TOKEN_SECRET)
         api = tweepy.API(auth)
         api.update_status(status = tweet)
     except Exception:
