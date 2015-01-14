@@ -112,7 +112,7 @@ def fitness(article, movie, model):
     return float(totalScore)/comparisons
 
 
-def blend(article, movie):
+def blend(article, movie,adjectives):
     title = movie.title
     print title
     

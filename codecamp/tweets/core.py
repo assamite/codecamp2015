@@ -21,6 +21,9 @@ def main(send_to_twitter = False):
             for keyword in nlp.parse(movies[i].title):
                 movies[i].keywords.add(keyword)
                 movies[i].save()
+                
+    #Fetch noun-adjective pairs from external file. Will return an empty list if file not found
+    adjectives = io.fetch_adjectives("lsa-matrix-full.txt")
         
     #Pull the latest news. There's no need to persist them.
     articles = io.fetch_articles_from_web(10)
@@ -59,7 +62,7 @@ def main(send_to_twitter = False):
         #Sleep
         return 1
     
-    tweet = nlp.blend(bestPair[0],bestPair[1])
+    tweet = nlp.blend(bestPair[0],bestPair[1],adjectives)
     if send_to_twitter: 
         io.tweet(tweet)
     return tweet
