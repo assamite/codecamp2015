@@ -16,6 +16,7 @@ from datetime import datetime
 
 import feedparser
 
+import nlp
 from models import Article, Movie, Person, Keyword
 
 
@@ -30,6 +31,8 @@ import tweepy
 logger = logging.getLogger('tweets.default')
 
 DEBUG = False
+
+RSS_URL = 'http://rss.cnn.com/rss/edition_entertainment.rss'
 
 def download_en(url, cached=False): # set cached=True to store the download source locally (faster)
     id = "en-hack-" + url
@@ -68,19 +71,70 @@ def tweet(tweet):
     
     return (True, tweet)
 
+
+def get_feed(rss_url, max_items = 10):
+    '''Get most recent entries from the given RSS feed.
+    
+    The returned entries are in the same format as created by `feedparser <http://pythonhosted.org/feedparser/>`_.
+    
+    :param rss_url: URL to the RSS feed
+    :type rss_url: str
+    :param max_items: Maximum amount of items returned from feed
+    :type max_items: int
+    :returns: list - feed's last entries
+    '''
+    logger.info("Getting {} newest articles from {}".format(max_items, rss_url))
+    feed = feedparser.parse(rss_url)
+    return feed['entries'] if len(feed['entries']) < max_items else feed['entries'][:max_items]
+
+
+def get_articles(rss_url, amount = 10):
+    '''Get most recent articles from the given RSS feed.
+    
+    Each article is returned as a dictionary with following contents:
+    
+    =====    =================================================
+    Key      Value
+    =====    =================================================
+    title    Headline for the article
+    url      URL for the article
+    =====    =================================================
+    
+    :param rss_url: URL to the RSS feed
+    :type rss_url: str
+    :param amount: Amount of articles to retrieve. For safety, should be in [1, 25].
+    :type amount: int
+    :returns: list -- Parsed articles  
+    '''
+    #if url_type not in SUPPORTED_FORMATS:
+    #    raise ValueError('Given url_type: {} not in supported formats.'.format(url_type))
+        
+    entries = get_feed(rss_url, max_items = amount)
+    ret = []
+    for entry in entries:
+        article = {}
+        article['title'] = entry['title']
+        article['url'] = entry['link']
+        #soup = _get_soup(entry['link'])
+        #article['text'] = _parse_article(soup, url_type = url_type)
+        #if bow:
+        #    article['bow_counts'] = text.bow(article['text'], counts = True)
+        #    article['bow'] = [w[0] for w in article['bow_counts']]
+        ret.append(article)
+    return ret
+        
+
 def fetch_articles_from_web(count):
     articles = []
-    for i in range(0,count):
-        #Fetch news article
-        #Create Article object
-        #Add to list
+    ret = get_articles(RSS_URL, count)
+    for a in ret:
+        article = Article(headline = a['title'], url = a['url'], date = datetime.now(), content = "")
+        article.save()
+        keywords = nlp.parse(a['title'])
+        for kw in keywords:
+            article.keywords.add(kw)
         
-        """    
-        d = feedparser.parse('http://rss.cnn.com/rss/edition_entertainment.rss')
-        """
-        
-        a = Article() 
-        articles.append(a)
+        articles.append(article)
         
     return articles
     

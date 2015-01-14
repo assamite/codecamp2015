@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
-from core import main
+import core
 
 from io import fetch_movies_from_web
 
@@ -13,7 +13,7 @@ def test(request):
     return HttpResponse("OK")
 
 def main(request):
-    tweet = main()
+    tweet = core.main(False)
     return HttpResponse(tweet)
 
 def nlps(request):

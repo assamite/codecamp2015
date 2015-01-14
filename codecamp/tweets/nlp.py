@@ -1,5 +1,6 @@
 from models import Keyword
 from pattern.en import parse,parsetree
+import re
 
 def parse(text):
 
@@ -12,39 +13,35 @@ def parse(text):
     # keywords.append(k)
 
     namedEntities = list()
+    print text
 
     previous_chunk=""
     index=0
     for sentence in parsetree(text, lemmata=True):
+        print sentence
         for chunk in sentence.chunks:
             for word in chunk.words:
-              #  print index
+                #  print index
                 if '-PERS' in word.tag and  '-PERS' in previous_chunk:
-                    namedEntities[index-1]=namedEntities[index-1]+" "+" "+word.lemma
-
+                    namedEntities[index-1]=namedEntities[index-1]+" "+(word.lemma).capitalize()
                 else:
                     if '-PERS' in word.tag:
-                        namedEntities.append(word.lemma)
+                        namedEntities.append((word.lemma).capitalize())
                         index+=1
                     else:
-                        keywordLemma = Keyword()
-                        keywordLemma.type = word.tag
-                        keywordLemma.word = word.lemma
-                        keywordLemma.weight = 0
+                        keywordLemma = Keyword(type = word.tag, word = word.lemma, weight = 0)
+                        keywordLemma.save()
                         keywords.append(keywordLemma)
                 previous_chunk=word.tag
 
-          #  print word.string,word.lemma,word.tag
+                #  print word.string,word.lemma,word.tag
 
 
             #  print namedEntities
 
     for namedEntity in namedEntities:
-       # print 'olaaaaaa',namedEntity
-        namedEntityKW = Keyword()
-        namedEntityKW.type = "NAMED_ENTITY_PERSON"
-        namedEntityKW.word = namedEntity
-        namedEntityKW.weight = 0
+        namedEntityKW = Keyword(type = "PERSON", word = namedEntity, weight = 0)
+        namedEntityKW.save()
         keywords.append(namedEntityKW)
 
     for keyword in keywords:
@@ -72,20 +69,22 @@ def fitness(article, movie):
     return 1
 
 
-
 def blend(article, movie):
+    title = movie.title
+    print title
     
-    blended = ""
+    movie_kw = ""
+    article_kw = ""
     #Blend article and movie together and return result text
-    for key_movie in movie.keywords:
+    for key_movie in movie.keywords.all():
         if "PERSON" in key_movie.type:
-            for key_news in article.keywords:
-                if "PERSON" in key_news.type:
-                    key_movie.word = key_news.word
-                    break
-                    
-    for key_movie in movie.keywords:
-        blended = blended + key_movie.word
-    
-    return blended
+            movie_kw = key_movie.word
+            break
+        
+    for key_news in article.keywords.all():
+        if "PERSON" in key_news.type:
+            article_kw = key_news.word 
+            break
+        
+    return re.sub(movie_kw, article_kw, title)
     
