@@ -196,6 +196,27 @@ def get_movie_based_on_keyword2(keyword):
     sorted_filmRatings = sorted(filmRatings.items(), key=operator.itemgetter(1), reverse=True)
     return fetch_single_movie_from_web(sorted_filmRatings[0][0])
 
+def fetch_adjectives(filename):
+    dict = {}
+    
+    c=0
+    with open(filename) as f:
+        c+=1
+        if c==0: 
+            return
+        line = f.readlines()
+        values = line.split("\t")
+        key = values[0].split("#")[0]
+        values = []
+        for i in range(1,len(values)):
+            values[i].replace(" ","#")
+            splitted = values[i].split("#")
+            if(splitted[1]=="a"):
+                values.append((splitted[0],splitted[2]))
+            dict[key]=values
+    
+    return dict
+
 def fetch_movies_from_web(amount):
     movies = []
     mainUrl = "http://www.imdb.com/search/title?groups=top_1000&sort=user_rating&view=simple"
