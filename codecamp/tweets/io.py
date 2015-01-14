@@ -11,7 +11,6 @@ import traceback
 import math
 import operator
 from pattern.web import DOM, URL, plaintext, encode_utf8, decode_utf8, cache
-#import plaintext
 import urllib2
 from datetime import datetime
 

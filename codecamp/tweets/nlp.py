@@ -1,5 +1,5 @@
 from models import Keyword
-from pattern.en import parse,parsetree
+from pattern.en import parse, parsetree, wordnet
 import re
 
 def parse(text):
@@ -66,7 +66,18 @@ def assess(keywords):
 def fitness(article, movie):
     
     #Calculate similarity score
-    return 1
+    totalScore = 0
+    comparisons = 0
+    for articleKeyword in article.keywords:
+        for movieKeyword in movie.keywords:
+            movieSynset = wordnet.synsets(movieKeyword)
+            if(articleKeyword.type==movieKeyword.type):
+                articleSynset = wordnet.synsets(articleKeyword)
+                score = wordnet.similarity(movieSynset,articleSynset)
+                totalScore += score
+                comparisons += 1
+                
+    return totalScore/comparisons
 
 
 def blend(article, movie):
