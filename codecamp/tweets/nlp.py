@@ -34,13 +34,13 @@ def parse(text):
                         keywords.append(keywordLemma)
                 previous_chunk=word.tag
 
-          #  print word.string,word.lemma,word.tag
+                #  print word.string,word.lemma,word.tag
 
 
             #  print namedEntities
 
     for namedEntity in namedEntities:
-       # print 'olaaaaaa',namedEntity
+        # print 'olaaaaaa',namedEntity
         namedEntityKW = Keyword()
         namedEntityKW.type = "NAMED_ENTITY_PERSON"
         namedEntityKW.word = namedEntity
@@ -88,4 +88,3 @@ def blend(article, movie):
         blended = blended + key_movie.word
     
     return blended
-    

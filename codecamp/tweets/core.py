@@ -8,6 +8,10 @@ if __name__ == '__main__':
     pass
 
 def main(self):
+    
+    io.queryFreebase("Arnold Schwarzenegger")
+    return
+    
     #Check if database is empty. In this case, fetch movies, parse them, and store them in database
     movies = Movie.objects.all()
     if(len(movies)==0):
