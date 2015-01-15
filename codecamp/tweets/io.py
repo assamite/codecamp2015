@@ -73,6 +73,18 @@ def tweet(tweet):
 
     return (True, tweet)
 
+
+def read_headlines(filepath = os.path.join(settings.ROOT_DIR, 'codecamp', 'tweets', 'headlines.txt')):
+    articles = []
+    with open(filepath) as f:
+        lines = f.read().split("\n")
+        print lines
+        for l in lines:
+            hl = l.strip() 
+            articles.append({'title': hl, 'url': ""})
+    return articles
+
+
 def get_feed(rss_url, max_items = 10):
     '''Get most recent entries from the given RSS feed.
 
@@ -125,11 +137,15 @@ def get_articles(rss_url, amount = 10):
     return ret
 
 
-def fetch_articles_from_web(count):
+def fetch_articles_from_web(count, spoof = False):
     articles = []
-    ret = get_articles(RSS_URL, count)
+    if not spoof:
+        ret = get_articles(RSS_URL, count)
+    else:
+        ret = read_headlines()
+        print ret
     for a in ret:
-        ars = Article.objects.filter(url = a['url'])
+        ars = Article.objects.filter(headline = a['title'])
         if len(ars) == 0:
             article = Article(headline = a['title'], url = a['url'], date = datetime.now(), content = "")
             article.save()
@@ -142,6 +158,7 @@ def fetch_articles_from_web(count):
             article = ars[0]
 
         articles.append(article)
+    print articles
     return articles
 
 def fetch_movies_from_noc():
@@ -421,7 +438,6 @@ def queryFreebaseNotableFromName(keyword):
 
 def queryFreebasePeopleNameFromAlias(keyword):
     service_url = 'https://www.googleapis.com/freebase/v1/search'
-    print settings.FREEBASE_API_KEY
     params = {
     'query': keyword,
     'key': settings.FREEBASE_API_KEY,
@@ -430,7 +446,6 @@ def queryFreebasePeopleNameFromAlias(keyword):
     }
     url = service_url + '?' + urllib.urlencode(params)
     response = json.loads(urllib.urlopen(url).read())
-    print response
     if(len(response["result"])>0):
         return response["result"][0]["name"]
     return -1

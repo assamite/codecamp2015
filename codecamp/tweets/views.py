@@ -15,7 +15,7 @@ def test(request):
     return HttpResponse("OK")
 
 def main(request):
-    tweet = core.main(False)
+    tweet = core.main(False, spoof = True)
     return HttpResponse(tweet)
 
 def nlps(request):

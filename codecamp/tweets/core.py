@@ -5,12 +5,15 @@ from models import Movie
 
 DEBUG = True
 
-def main(send_to_twitter = False):
+def main(send_to_twitter = False, spoof = False):
     #Check if database is empty. In this case, fetch movies, parse them, and store them in database
-    import gensim
-    print "Loading gensim model"
-    model = gensim.models.Word2Vec.load('/Users/pihatonttu/nltk_data/gensim/googlenews_gensim_v2w.model')
-    print "Model loaded"
+    if not spoof:
+        import gensim
+        print "Loading gensim model"
+        model = gensim.models.Word2Vec.load('/Users/pihatonttu/nltk_data/gensim/googlenews_gensim_v2w.model')
+        print "Model loaded"
+    else:
+        model = None
     
     movies = Movie.objects.all()
     if(len(movies)==0):
@@ -24,7 +27,7 @@ def main(send_to_twitter = False):
     adjectives = io.fetch_adjectives("lsa-matrix-full.txt")
         
     #Pull the latest news. There's no need to persist them.
-    articles = io.fetch_articles_from_web(2)
+    articles = io.fetch_articles_from_web(10, spoof = spoof)
     
     #Parse articles
     for i in range(0,len(articles)):
@@ -50,6 +53,8 @@ def main(send_to_twitter = False):
     for a in articles:
         print a.headline
         for m in movies:
+            if len(m.title.split()) < 4:
+                continue
             fitness = get_fitness(a, m, model)         
             if(fitness>maxFitness):
                 print "\t", m.title, fitness
@@ -62,11 +67,15 @@ def main(send_to_twitter = False):
     
     tweet = nlp.blend(bestPair[0],bestPair[1],adjectives)
     if send_to_twitter and not DEBUG: 
-        io.tweet(tweet)
+        if tweet != movie.title:
+            io.tweet(tweet)
     return tweet
 
 
 def get_fitness(article, movie, model):
+    if model is None:
+        return len(movie.title.split())
+    
     totalScore = 0
     comparisons = 0
     article_kws = article.keywords.filter(type = "NN")

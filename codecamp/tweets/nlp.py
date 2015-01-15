@@ -111,24 +111,114 @@ def fitness(article, movie, model):
                 
     return float(totalScore)/comparisons
 
+def levenshtein(s1, s2):
+    if len(s1) < len(s2):
+        return levenshtein(s2, s1)
+ 
+     # len(s1) >= len(s2)
+    if len(s2) == 0:
+         return len(s1)
+ 
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1 # j+1 instead of j since previous_row and current_row are one character longer
+            deletions = current_row[j] + 1       # than s2
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+ 
+    return previous_row[-1]
 
-def blend(article, movie,adjectives):
-    title = movie.title
-    #print title
+
+def similarwords(word, adjectives):
+    #READ THE FILE
+    #SEARCH THE TERM IN COLUMN N. 1
+    #TAKE THE MOST SIMILAR ADJECTIVE: look similarity numbers
+   
+    l = adjectives[word]
+    final_adj = ""
+    if(len(l)>0):
+        final_adj = l[0]
+        max_score = l[0][1]
+        for adj in l:
+            if adj[1]>=max_score:
+                final_adj=adj
+    return final_adj
     
+    
+#def blend(article, movie):
+def blend(article, movie, adjectives):
+      
+    blended = ""
+    flag = 0
+    
+    #Blend article and movie together and return result text
+    title = movie.title
+    noun_needed = ""
     movie_kw = ""
     article_kw = ""
+    adj_candidates = list()
+    noun_candidates = list()
+    alias_list = list()
+    rank_min = 10000;
     #Blend article and movie together and return result text
+    
+    #Case that we can exchange Person in the article by Person in the movie
     for key_movie in movie.keywords.all():
         if "PERSON" in key_movie.type:
             movie_kw = key_movie.word
+            alias_list = io.queryFreebaseAliases(movie_kw)
+            flag = 1
             break
-        
-    for key_news in article.keywords.all():
-        if "PERSON" in key_news.type:
-            article_kw = key_news.word 
-            break
-    print movie_kw, article_kw, title
-        
-    return re.sub(movie_kw, article_kw, title)
+    
+    if flag == 1:
+        flag = 0
+        for key_news in article.keywords.all():
+            if "PERSON" in key_news.type:
+                for alias in alias_list:
+                    rank=levenshtein(alias,key_news.word)
+                    if rank < rank_min:
+                        rank_min = rank
+                        article_kw = alias 
+                flag = 1
+                break
+        if flag == 1:
+            #       print "ME VOYYYY"
+            return re.sub(movie_kw, article_kw, title)  #END CASE PERSON
+    
+    else:   
+        #  if flag == 0:
+        for key_movie in movie.keywords.all():
+            if "N" in key_movie.type: #We take the first noun in the movie title
+                movie_kw = key_movie.word
+                
+         #Case where we have an adjective in the article        
+        for key_article in article.keywords.all():
+            if "J" in key_article.type:           
+                article_kw = key_article.word
+               
+                #measure similarity??
+                #similarity = "0"
+                #adj_candidates.append([key_article.word, similarity])
+                flag =2
+                break;
+    #Case where we have nouns in the article 
+    if flag != 2:
+        for key_article in article.keywords.all():
+            if key_article.word not in movie.title:
+                if "NN" == key_article.type or "NNS"== key_article.type:
+                    #Similarity words
+              #      print "HOLAAAA"+key_article.word
+                    adj_list = similarwords(key_article.word, adjectives)
+                    
+                    #Save the adj
+                    article_kw = adj_list[0]
+                    #article_kw = key_article.word
+                    break;
+
+    print re.sub(movie_kw, article_kw+" "+movie_kw, title)
+    return re.sub(movie_kw, article_kw+" "+movie_kw, title)
+
     
