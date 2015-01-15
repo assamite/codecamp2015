@@ -249,6 +249,7 @@ def fetch_single_movie_from_web(singleUrl):
     return newMovie
 
 def get_movie_based_on_keyword(keyword):
+    movies = []
     src = download_en("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + keyword + "&s=all")
     dom = DOM(src)
 
@@ -270,7 +271,10 @@ def get_movie_based_on_keyword(keyword):
             filmRatings[indivUrl] = int(filmPopularity)
 
     sorted_filmRatings = sorted(filmRatings.items(), key=operator.itemgetter(1), reverse=True)
-    return fetch_single_movie_from_web(sorted_filmRatings[0][0])
+    for sortedFilm in sorted_filmRatings:
+        if int(sortedFilm[1]) > 5000:
+            movies.append(fetch_single_movie_from_web(sortedFilm[0]))
+    return movies
 
 #Fetch pairs of noun:((adjective:score),(adjective:score),...)  from specially prepared file
 def fetch_adjectives(filename):
