@@ -75,9 +75,9 @@ def tweet(tweet):
 
 def get_feed(rss_url, max_items = 10):
     '''Get most recent entries from the given RSS feed.
-    
+
     The returned entries are in the same format as created by `feedparser <http://pythonhosted.org/feedparser/>`_.
-    
+
     :param rss_url: URL to the RSS feed
     :type rss_url: str
     :param max_items: Maximum amount of items returned from feed
@@ -91,25 +91,25 @@ def get_feed(rss_url, max_items = 10):
 
 def get_articles(rss_url, amount = 10):
     '''Get most recent articles from the given RSS feed.
-    
+
     Each article is returned as a dictionary with following contents:
-    
+
     =====    =================================================
     Key      Value
     =====    =================================================
     title    Headline for the article
     url      URL for the article
     =====    =================================================
-    
+
     :param rss_url: URL to the RSS feed
     :type rss_url: str
     :param amount: Amount of articles to retrieve. For safety, should be in [1, 25].
     :type amount: int
-    :returns: list -- Parsed articles  
+    :returns: list -- Parsed articles
     '''
     #if url_type not in SUPPORTED_FORMATS:
     #    raise ValueError('Given url_type: {} not in supported formats.'.format(url_type))
-        
+
     entries = get_feed(rss_url, max_items = amount)
     ret = []
     for entry in entries:
@@ -123,7 +123,7 @@ def get_articles(rss_url, amount = 10):
         #    article['bow'] = [w[0] for w in article['bow_counts']]
         ret.append(article)
     return ret
-        
+
 
 def fetch_articles_from_web(count):
     articles = []
@@ -140,10 +140,38 @@ def fetch_articles_from_web(count):
             
         else:
             article = ars[0]
-     
-        articles.append(article) 
+
+        articles.append(article)
     return articles
-    
+
+def fetch_movies_from_noc():
+    movies = []
+
+    for i in range(1, 10):#len(csv)):
+        row = str(csv[i][0]).split(";")
+        if row[2] == "TV Show" or row[2] == "Movie":
+            movieName = row[0]
+            print movieName
+
+            #getting movie
+            nameToSearch = movieName.replace(" ", "+")
+            findAtUrl = "http://www.imdb.com/find?ref_=nv_sr_fn&q=" + nameToSearch + "&s=all"
+            #print findAtUrl
+            src = download_en(findAtUrl)
+            dom = DOM(src)
+
+            allFilmInstances = dom(".findList .result_text a")
+            #print len(allFilmInstances)
+
+            resultString = allFilmInstances[0]
+            #print resultString
+            #print movieName
+            if str(resultString[0]) == str(movieName):
+
+                #print resultString
+                if "title" in allFilmInstances[0].href:
+                    movies.append(fetch_single_movie_from_web("http://akas.imdb.com" + resultString.href))
+    return movies
 
 def fetch_single_movie_from_web(singleUrl):
     src = download_en(singleUrl) #force english downloading of movie URL
@@ -223,6 +251,7 @@ def fetch_single_movie_from_web(singleUrl):
     return newMovie
 
 def get_movie_based_on_keyword(keyword):
+    movies = []
     src = download_en("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + keyword + "&s=all")
     dom = DOM(src)
 
@@ -244,7 +273,10 @@ def get_movie_based_on_keyword(keyword):
             filmRatings[indivUrl] = int(filmPopularity)
 
     sorted_filmRatings = sorted(filmRatings.items(), key=operator.itemgetter(1), reverse=True)
-    return fetch_single_movie_from_web(sorted_filmRatings[0][0])
+    for sortedFilm in sorted_filmRatings:
+        if int(sortedFilm[1]) > 5000:
+            movies.append(fetch_single_movie_from_web(sortedFilm[0]))
+    return movies
 
 #Fetch pairs of noun:((adjective:score),(adjective:score),...)  from specially prepared file
 def fetch_adjectives(filename): 
