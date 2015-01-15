@@ -1,11 +1,9 @@
 import io
 import nlp
 from models import Movie
-from django.http.response import HttpResponse
 #from tweets.io import fetch_movies_from_web, fetch_articles_from_web
 
-if __name__ == '__main__':
-    pass
+DEBUG = True
 
 def main(send_to_twitter = False):
     #Check if database is empty. In this case, fetch movies, parse them, and store them in database
@@ -26,7 +24,7 @@ def main(send_to_twitter = False):
     adjectives = io.fetch_adjectives("lsa-matrix-full.txt")
         
     #Pull the latest news. There's no need to persist them.
-    articles = io.fetch_articles_from_web(10)
+    articles = io.fetch_articles_from_web(2)
     
     #Parse articles
     for i in range(0,len(articles)):
@@ -63,7 +61,7 @@ def main(send_to_twitter = False):
         return 1
     
     tweet = nlp.blend(bestPair[0],bestPair[1],adjectives)
-    if send_to_twitter: 
+    if send_to_twitter and not DEBUG: 
         io.tweet(tweet)
     return tweet
 

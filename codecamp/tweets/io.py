@@ -132,10 +132,12 @@ def fetch_articles_from_web(count):
         ars = Article.objects.filter(url = a['url'])
         if len(ars) == 0:
             article = Article(headline = a['title'], url = a['url'], date = datetime.now(), content = "")
+            article.save()
             keywords = nlp.parse(a['title'])
             for kw in keywords:
                 article.keywords.add(kw)
             article.save()
+            
         else:
             article = ars[0]
      
@@ -245,8 +247,11 @@ def get_movie_based_on_keyword(keyword):
     return fetch_single_movie_from_web(sorted_filmRatings[0][0])
 
 #Fetch pairs of noun:((adjective:score),(adjective:score),...)  from specially prepared file
-def fetch_adjectives(filename):
+def fetch_adjectives(filename): 
     d = {}
+    if not os.path.exists(filename):
+        return d
+    
     with open(filename) as f:
         for line in f.readlines():
             words = line.split("\t")

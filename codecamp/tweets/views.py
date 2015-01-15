@@ -26,7 +26,6 @@ def fetch_movies(request):
     movies = fetch_movies_from_web(1000)
     return HttpResponse(movies)
 
-
 def process_summaries(request):
     movies = Movie.objects.all()
     for movie in movies:
@@ -76,4 +75,6 @@ def filter_keywords(request):
             kw.delete()
             
     return HttpResponse("OK")
+
+
                 

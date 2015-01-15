@@ -15,6 +15,7 @@ import tweepy
 
 #from core import TWEET_CORE
 from models import Article, Movie
+from core import main
 
 logger = logging.getLogger('django.cron')
 
@@ -51,6 +52,6 @@ class ArticleReader(CronJobBase):
      
     def do(self): 
         logger.info("Initiating cronjob: {}".format(self.code)) 
-        pass            
+        main()           
 
                 

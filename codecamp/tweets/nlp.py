@@ -114,7 +114,7 @@ def fitness(article, movie, model):
 
 def blend(article, movie,adjectives):
     title = movie.title
-    print title
+    #print title
     
     movie_kw = ""
     article_kw = ""
@@ -128,6 +128,7 @@ def blend(article, movie,adjectives):
         if "PERSON" in key_news.type:
             article_kw = key_news.word 
             break
+    print movie_kw, article_kw, title
         
     return re.sub(movie_kw, article_kw, title)
     
