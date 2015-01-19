@@ -15,8 +15,11 @@ def test(request):
     return HttpResponse("OK")
 
 def main(request):
-    tweet = core.main(False, spoof = True)
-    return HttpResponse(tweet)
+    tweets = core.main(True, spoof = False)
+    html = ""
+    for tweet in tweets:
+        html += tweet[0] + ": " + tweet[1].title + "<br>"
+    return HttpResponse(html)
 
 def nlps(request):
     ret = nlp.parse("Angelina Jolie is having breakfast with Brad Pitt.")
@@ -29,8 +32,11 @@ def fetch_movies(request):
 def process_summaries(request):
     movies = Movie.objects.all()
     for movie in movies:
+        movie.keywords.clear()
+    
+    for movie in movies:
         print movie.title
-        keywords = nlp.parse(movie.long_summary)
+        keywords = nlp.parse(movie.short_summary)
         
         for kw in keywords:
             mkw = movie.keywords.filter(type = kw.type, word = kw.word)
@@ -75,6 +81,8 @@ def filter_keywords(request):
             kw.delete()
             
     return HttpResponse("OK")
+
+
 
 
                 

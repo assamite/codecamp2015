@@ -4,7 +4,7 @@ import re
 
 import io
 
-def parse(text):
+def parse(text, fetch_aliases = True):
 
     keywords = list()
     #Parse: extract nouns, adjectives, named entities, etc., and add keyword-objects to list
@@ -34,7 +34,7 @@ def parse(text):
                         tag = word.tag
                         lemma = word.lemma
                         if tag[:2] in ['NN', 'JJ', 'VB']:
-                            if tag == "NNP":
+                            if tag == "NNP" and fetch_aliases:
                                 lemma = lemma.capitalize()
                                 person = io.queryFreebasePeopleNameFromAlias(lemma)
                                 if person != -1:
@@ -64,7 +64,7 @@ def parse(text):
         keywords.append(namedEntityKW)
 
     for keyword in keywords:
-        print keyword.type, keyword.word
+        print "\t", keyword.type, keyword.word
 
     return keywords
 
@@ -149,7 +149,8 @@ def similarwords(word, adjectives):
     
     
 #def blend(article, movie):
-def blend(article, movie, adjectives):
+def blend(article, movie, adjectives, model = None):
+    print u"Blending {} and {}".format(article.headline, movie.title)
       
     blended = ""
     flag = 0
@@ -194,16 +195,17 @@ def blend(article, movie, adjectives):
             if "N" in key_movie.type: #We take the first noun in the movie title
                 movie_kw = key_movie.word
                 
-         #Case where we have an adjective in the article        
-        for key_article in article.keywords.all():
-            if "J" in key_article.type:           
-                article_kw = key_article.word
-               
-                #measure similarity??
-                #similarity = "0"
-                #adj_candidates.append([key_article.word, similarity])
-                flag =2
-                break;
+         #Case where we have an adjective in the article  
+        if movie_kw != "" :     
+            for key_article in article.keywords.all():
+                if "J" in key_article.type:           
+                    article_kw = key_article.word
+                   
+                    #measure similarity??
+                    #similarity = "0"
+                    #adj_candidates.append([key_article.word, similarity])
+                    flag =2
+                    break;
     #Case where we have nouns in the article 
     if flag != 2:
         for key_article in article.keywords.all():
@@ -218,7 +220,15 @@ def blend(article, movie, adjectives):
                     #article_kw = key_article.word
                     break;
 
-    print re.sub(movie_kw, article_kw+" "+movie_kw, title)
-    return re.sub(movie_kw, article_kw+" "+movie_kw, title)
+    movie_kw = movie_kw.capitalize()
+    article_kw = article_kw.capitalize()
+    substr = " ".join([article_kw, movie_kw])
+    #print substr
+    #print re.sub(movie_kw, substr, title)
+    
+    if movie_kw == "":
+        return ""
+    
+    return re.sub(movie_kw, substr, title)
 
     

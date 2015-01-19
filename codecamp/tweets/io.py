@@ -17,12 +17,13 @@ from pattern.web import DOM, URL, plaintext, encode_utf8, decode_utf8, cache
 import urllib2
 from datetime import datetime
 import feedparser
+from unidecode import unidecode
 
 import nlp
 from models import Article, Movie, Person, Keyword
 
-RSS_URL = 'http://rss.cnn.com/rss/edition_entertainment.rss'
-
+#RSS_URL = 'http://rss.cnn.com/rss/edition_entertainment.rss'
+RSS_URL = "http://uk-syndication.eonline.com/syndication/feeds/rssfeeds/topstories_uk.xml"
 
 # In case we are not running these through Django, let module know
 # the correct twitter app settings from TwatBot's settings file.
@@ -69,6 +70,7 @@ def tweet(tweet):
     except Exception:
         e = traceback.format_exc()
         logger.error("Could not tweet to Twitter. Error: {}".format(e))
+        print e
         return (False, "")
 
     return (True, tweet)
@@ -81,7 +83,8 @@ def read_headlines(filepath = os.path.join(settings.ROOT_DIR, 'codecamp', 'tweet
         print lines
         for l in lines:
             hl = l.strip() 
-            articles.append({'title': hl, 'url': ""})
+            if hl[0] != "#":
+                articles.append({'title': hl, 'url': ""})
     return articles
 
 
@@ -96,7 +99,7 @@ def get_feed(rss_url, max_items = 10):
     :type max_items: int
     :returns: list - feed's last entries
     '''
-    logger.info("Getting {} newest articles from {}".format(max_items, rss_url))
+    logger.info("Fetching {} newest articles from {}".format(max_items, rss_url))
     feed = feedparser.parse(rss_url)
     return feed['entries'] if len(feed['entries']) < max_items else feed['entries'][:max_items]
 
@@ -149,7 +152,7 @@ def fetch_articles_from_web(count, spoof = False):
         if len(ars) == 0:
             article = Article(headline = a['title'], url = a['url'], date = datetime.now(), content = "")
             article.save()
-            keywords = nlp.parse(a['title'])
+            keywords = nlp.parse(a['title'], fetch_aliases = not spoof)
             for kw in keywords:
                 article.keywords.add(kw)
             article.save()
@@ -157,9 +160,11 @@ def fetch_articles_from_web(count, spoof = False):
         else:
             article = ars[0]
 
-        articles.append(article)
-    print articles
+        if not article.used: 
+            articles.append(article)
+    print "Retrieved {} not Tweeted articles".format(len(articles))
     return articles
+
 
 def fetch_movies_from_noc():
     movies = []
@@ -208,6 +213,10 @@ def fetch_single_movie_from_web(singleUrl):
     #get film title
     for filmTitle in filmDom(".header .itemprop"):
         title = str(filmTitle[0])
+
+    mvs = Movie.objects.filter(title = title)
+    if len(mvs) > 0:
+        return mvs[0]
 
     #get film genres
     for filmGenre in filmDom(".infobar .itemprop"):
@@ -267,13 +276,16 @@ def fetch_single_movie_from_web(singleUrl):
 
     return newMovie
 
-def get_movie_based_on_keyword(keyword):
+def get_movie_based_on_keyword(keyword, model = None):
+    print "Fetching movies based on keyword: {}".format(keyword)
     movies = []
     src = download_en("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + keyword + "&s=all")
     dom = DOM(src)
 
     #initializing dictionary
     filmRatings = dict()
+    
+    urls = {}
 
     for filmInstances in dom(".findList .result_text a"):
         resultString = str(filmInstances[0])
@@ -287,12 +299,51 @@ def get_movie_based_on_keyword(keyword):
                 continue
             filmPopularity = str(filmPopularityElement[0][0])
             filmPopularity = filmPopularity.replace(",", "")
-            filmRatings[indivUrl] = int(filmPopularity)
+            try:
+                filmPopularity = int(filmPopularity)
+            except:
+                filmPopularity = 1
+            filmRatings[resultString] = filmPopularity
+            urls[resultString] = indivUrl
 
     sorted_filmRatings = sorted(filmRatings.items(), key=operator.itemgetter(1), reverse=True)
     for sortedFilm in sorted_filmRatings:
         if int(sortedFilm[1]) > 5000:
-            movies.append(fetch_single_movie_from_web(sortedFilm[0]))
+            try: 
+                #mv = fetch_single_movie_from_web(sortedFilm[0])
+                title = sortedFilm[0]
+                keywords = nlp.parse(title, fetch_aliases = False)
+                accepted = False
+                keyword = keyword.lower()
+                for kw in keywords:
+                    kw = kw.word.lower()
+                    if model is not None:
+                        try:
+                            sim = model.similarity(kw, keyword)
+                            if sim > 0.7:
+                                accepted = True
+                        except:
+                            pass
+                    else:
+                        if kw == keyword:
+                            accepted = True    
+                
+                if accepted:
+                    print "accepted: {} {} {}".format(kw, keyword, title)
+                    mvs = Movie.objects.filter(title = title)
+                    if len(mvs) == 0:
+                        mv = Movie(title = title, short_summary = "", long_summary = "", year = 0, url = urls[title], toplist_pos = 10000000)
+                        mv.save()
+                        for kw in keywords:
+                            mv.keywords.add(kw)
+                        mv.save()
+                    else:
+                        mv = mvs[0]
+                    movies.append(mv)
+            except: 
+                print "Error while fetching movie {}: {}".format(sortedFilm[0], traceback.format_exc())
+        
+    print "Found {} movies".format(len(movies))
     return movies
 
 #Fetch pairs of noun:((adjective:score),(adjective:score),...)  from specially prepared file
@@ -437,6 +488,7 @@ def queryFreebaseNotableFromName(keyword):
     return -1
 
 def queryFreebasePeopleNameFromAlias(keyword):
+    keyword = unidecode(keyword)
     service_url = 'https://www.googleapis.com/freebase/v1/search'
     params = {
     'query': keyword,

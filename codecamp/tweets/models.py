@@ -1,5 +1,7 @@
 from django.db import models
 
+from datetime import datetime
+
 # Create your models here.
 class GetOrNoneManager(models.Manager):
     """Manager which overrides Django's standard manager in all of the module's models.
@@ -38,15 +40,16 @@ class Person(models.Model):
     # Negative talk points / attributes
     negattr = models.ManyToManyField(Keyword, related_name = 'negattr+')
     aliases = models.ManyToManyField(Alias, related_name = 'alias+')
+    last_usage = models.DateTimeField(auto_now = True, null = True)
     objects = GetOrNoneManager()
     
     
 class Movie(models.Model):
     title = models.CharField(max_length = 300)
-    short_summary = models.TextField()
+    short_summary = models.TextField(null = True)
     long_summary = models.TextField(blank = True, null = True)
     genre = models.CharField(max_length = 100)
-    url = models.URLField()
+    url = models.URLField(null = True)
     year = models.IntegerField(blank = True, null = True)
     toplist_pos = models.PositiveIntegerField(blank = True, null = True)
     # Persons who are played by the cast
@@ -65,5 +68,9 @@ class Article(models.Model):
     used = models.BooleanField(default = False)
     objects = GetOrNoneManager()
     
+    
+class Tweet(models.Model):
+    content = models.CharField(max_length = 200)
+    date = models.DateTimeField(auto_now_add = True)
     
 
